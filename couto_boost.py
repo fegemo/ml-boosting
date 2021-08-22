@@ -37,7 +37,7 @@ class CoutoBoostClassifier:
         # Em alto nível:
         # 1. cria stumps (seguindo uma estratégia específica para tic-tac-toe)
         self.stumps = self._create_stumps(X)
-        print("stumps totais: ", len(self.stumps))
+        # print("stumps totais: ", len(self.stumps))
         
         # 2. inicializa escolhas das iterações
         self.iteration_errors = []
@@ -53,20 +53,20 @@ class CoutoBoostClassifier:
         # 4. repete
         for t in range(self.max_estimators):
             print("Iteração t=", t)
-            print("iteration_stumps: ", self.iteration_stumps)
-            print("iteration_errors: ", self.iteration_errors)
-            print("iteration_alphas: ", self.iteration_alphas)
             # 4.1. seleciona melhor stump (e o remove da lista de disponíveis)
             best_stump, best_stump_id, error, mistakes = self._pick_best_stump(X, y)
-            print("best_stump_index: ", best_stump_id)
-            print("best_stump: ", best_stump)
-            print("error: ", error)
-            print("mistakes: ", len(mistakes))
+            # print("best_stump_index: ", best_stump_id)
+            # print("best_stump: ", best_stump)
+            # print("error: ", error)
+            # print("mistakes: ", len(mistakes))
             
             # 4.2. calcula importância do stump selecionado
             # 4.3. atualiza os pesos considerando esse stump
             self._update_weights(error, mistakes)
-            
+            # print("iteration_stumps: ", self.iteration_stumps)
+            # print("iteration_errors: ", self.iteration_errors)
+            # print("iteration_alphas: ", self.iteration_alphas)
+
             # 4.4. se erro = 0 ou selecionou max_estimators, sai
             if error == 0:
                 print("Saiu mais cedo porque erro empírico zerou na iteração " + str(t))
@@ -163,7 +163,7 @@ class CoutoBoostClassifier:
         best_stump_id = -1
         best_stump_error = float("inf")
         temp_stump_errors = []
-        mistaken_sample_ids = []
+        best_stump_mistaken_sample_ids = []
 
         # percorre stumps e pega o que menos errou
         for stump_id, (feature, value, label) in enumerate(self.stumps):
@@ -178,7 +178,6 @@ class CoutoBoostClassifier:
             
             # percorre os exemplos verificando se este stump errou cada um
             # print("Percorrendo exemplos")
-            print("X:", X.shape)
             for sample_id, x in enumerate(X):
                 # stump e exemplo têm mesma feature?
                 feature_matches = x[feature] == value
@@ -190,6 +189,9 @@ class CoutoBoostClassifier:
 
                 if (feature_matches and not label_matches) or (not feature_matches and label_matches):
                     # print("Somando erro de " + str(self.input_weights[sample_id]) + " ao stump " + str(stump_id))
+                    # if stump_id == 53:
+                    #     print(
+                    #         "self.input_weights[sample_id], ", self.input_weights[sample_id])
                     stump_error += self.input_weights[sample_id]
                     mistaken_sample_ids.append(sample_id)
             
@@ -198,7 +200,10 @@ class CoutoBoostClassifier:
             if stump_error < best_stump_error:
                 best_stump_error = stump_error
                 best_stump_id = stump_id
+                best_stump_mistaken_sample_ids = mistaken_sample_ids
         
+
+        # remove this....
         if best_stump_id == -1:
             print("temp_stump_errors", temp_stump_errors)
             raise Exception("Nenhum stump foi escolhido")
@@ -206,14 +211,14 @@ class CoutoBoostClassifier:
         self.iteration_stumps.append(best_stump_id)
         self.iteration_errors.append(best_stump_error)
         
-        return self.stumps[best_stump_id], best_stump_id, best_stump_error, mistaken_sample_ids
+        return self.stumps[best_stump_id], best_stump_id, best_stump_error, best_stump_mistaken_sample_ids
     
     
     def _update_weights(self, error, mistaken_sample_ids):
         
         alpha = np.log((1-error)/error) / 2
         self.iteration_alphas.append(alpha)
-        print(f"Errou {len(mistaken_sample_ids)} exemplos")
+        # print(f"Errou {len(mistaken_sample_ids)} exemplos")
         
         # acha novos pesos (sem normalizar ainda)
         weight_sum = 0
