@@ -8,8 +8,8 @@ class CoutoBoostClassifier(BaseEstimator, ClassifierMixin):
     interface pública dos classificadores
     do sk-learn.
     """
-    def __init__(self, max_estimators=108):
-        self.max_estimators = max_estimators
+    def __init__(self, iterations=108):
+        self.iterations = iterations
 
     
     def fit(self, X, y):
@@ -49,16 +49,15 @@ class CoutoBoostClassifier(BaseEstimator, ClassifierMixin):
         self.input_weights = np.full(samples, 1/samples)
 
         # 4. repete
-        for t in range(self.max_estimators):
-            # print("Iteração t=", t)
-            # 4.1. seleciona melhor stump (e o remove da lista de disponíveis)
+        for t in range(self.iterations):
+            # 4.1. seleciona melhor stump
             error, mistakes = self._pick_best_stump(X, y)
             
             # 4.2. calcula importância do stump selecionado
             # 4.3. atualiza os pesos considerando esse stump
             self._update_weights(error, mistakes)
 
-            # 4.4. se erro = 0 ou selecionou max_estimators, sai
+            # 4.4. se erro = 0 antes das iterações terminarem, sai
             if error == 0:
                 print("Saiu mais cedo porque erro empírico zerou na iteração " + str(t))
                 break
@@ -67,7 +66,7 @@ class CoutoBoostClassifier(BaseEstimator, ClassifierMixin):
         return self
         
 
-    def predict(self, X, max_estimators=None):
+    def predict(self, X, iterations_to_consider=None):
         """
         Classifica o vetor de exemplos X.
         
@@ -82,20 +81,20 @@ class CoutoBoostClassifier(BaseEstimator, ClassifierMixin):
         y : ndarray da forma (n_exemplos,)
             As classes escolhidas.
         """
-        classified = self.decision_function(X, max_estimators)
+        classified = self.decision_function(X, iterations_to_consider)
         classified[classified > 0] = +1
         classified[classified < 0] = -1
             
         return classified
            
 
-    def decision_function(self, X, max_estimators=None):
+    def decision_function(self, X, iterations_to_consider=None):
         # Em alto nível
         # 1. invoca todos os stumps
         # 2. multiplica o resultado de cada um pelo alfa
         # 3. soma tudo e retorna
         iterations = np.minimum(
-            (max_estimators or self.max_estimators), len(self.iteration_stumps))
+            (iterations_to_consider or self.iterations), len(self.iteration_stumps))
         decision = np.zeros(X.shape[0])
         for i in range(X.shape[0]):
 
@@ -137,19 +136,8 @@ class CoutoBoostClassifier(BaseEstimator, ClassifierMixin):
 
     
     def _create_stumps(self, X):
-        all_stumps = np.array(self._create_all_posible_stumps(X))
-        stumps = []
-        
-        # vamos precisar selecionar alguns stumps
-        if self.max_estimators < len(all_stumps):
-            chosen_stump_indices = np.random.choice(len(all_stumps), size=self.max_estimators, replace=False)
-            stumps = all_stumps[chosen_stump_indices].tolist()
-        # quantidade de stumps solicitada é maior ou igual ao máximo
-        else:
-            stumps = all_stumps
-            
+        stumps = np.array(self._create_all_posible_stumps(X))   
         self.n_estimators = len(stumps)
-        
         return stumps
     
     
@@ -205,12 +193,12 @@ class CoutoBoostClassifier(BaseEstimator, ClassifierMixin):
 
     def get_params(self, deep=True):
         params = {
-            "max_estimators": self.max_estimators
+            "iterations": self.iterations
         }
         return params
 
     def __str__(self):
-        return f"CoutoBoostClassifier(max_estimators={self.max_estimators})"
+        return f"CoutoBoostClassifier(iterations={self.iterations})"
 
     def __repr__(self):
-        return f"CoutoBoostClassifier(max_estimators={self.max_estimators})"
+        return f"CoutoBoostClassifier(iterations={self.iterations})"

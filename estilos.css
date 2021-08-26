@@ -27,11 +27,66 @@ dd {
     grid-column: 2 / 3;
 }
 
+/* Estilos do primeiro parágrafo (contém img avatar) da primeira célula HTML */
+#MathJax_Message + .jp-Cell-inputWrapper:nth-of-type(2) p:first-of-type,
+.jp-Cell.jp-mod-rendered:first-of-type p:first-of-type,
+.text_cell.rendered:first-of-type p:first-of-type {
+    float: right;
+    max-width: 150px;
+}
+
 img[alt^="Avatar"] {
     float: right;
     border-radius: 50%;
-    max-width: 150px;
+    max-width: 100%;
     shape-outside: circle(50%);
+    animation: breething 5s ease-in-out 0s infinite alternate;
+    position: relative;
+}
+
+#MathJax_Message + .jp-Cell-inputWrapper:nth-of-type(2) p:first-of-type:hover img[alt^="Avatar"],
+.jp-Cell.jp-mod-rendered:first-of-type p:first-of-type:hover img[alt^="Avatar"],
+.text_cell.rendered:first-of-type p:first-of-type:hover img[alt^="Avatar"] {
+    transform-origin: center bottom;
+    animation: rotating 1s ease-in-out 0s 1,
+        jumping-up 0.1s ease-out 0.6s 1,
+        falling-down 0.1s ease-in 0.7s 1,
+        flattening 0.2s ease-out 0.8s 1; 
+}
+
+@keyframes breething {
+    from { transform: scale(1) }
+    to { transform: scale(0.975) }
+}
+
+@keyframes rotating {
+    from { transform: rotateY(0) }
+    to { transform: rotateY(3turn) }
+}
+
+@keyframes jumping-up {
+    from { top: 0 }
+    to { top: -200px }
+}
+
+@keyframes falling-down {
+    from { top: -200px }
+    to { top: 0 }
+}
+
+@keyframes flattening {
+    0% { 
+        transform: scaleY(0.8) scaleX(1.2);
+    }
+    33% {
+        transform: scaleY(1.1) scaleX(0.9);
+    }
+    67% {
+        transform: scaleY(0.95) scaleX(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 .jp-Cell.jp-mod-rendered .jp-RenderedMarkdown > h2,
@@ -44,9 +99,29 @@ img[alt^="Avatar"] {
 #MathJax_Message + .jp-Cell-inputWrapper:nth-of-type(2),
 .jp-Cell.jp-mod-rendered:first-of-type,
 .text_cell.rendered:first-of-type {
-    background-image: url(https://fegemo.github.io/ml-boosting/tic-tac-toe.jpg);
-    background-size: contain;
-    background-repeat: repeat-x;
+    position: relative;
+    overflow: hidden;
+}
+
+#MathJax_Message + .jp-Cell-inputWrapper:nth-of-type(2)::before,
+.jp-Cell.jp-mod-rendered:first-of-type::before,
+.text_cell.rendered:first-of-type::before {
+    content: "";
+    display: block;
+    position: absolute;
+    --blur-size: 0px;
+    top: calc(-3 * var(--blur-size));
+    right: calc(-3 * var(--blur-size));
+    bottom: calc(-3 * var(--blur-size));
+    left: calc(-3 * var(--blur-size));
+    pointer-events: none;
+    background-image: linear-gradient(45deg, #000000, #00b6ec), url(https://fegemo.github.io/ml-boosting/tic-tac-toe.jpg);
+    filter: blur(var(--blur-size)) brightness(0.2);
+    background-blend-mode: hard-light;
+}
+
+#MathJax_Message + .jp-Cell-inputWrapper:nth-of-type(2)::before {
+    z-index: -1;
 }
 
 #MathJax_Message + .jp-Cell-inputWrapper:nth-of-type(2) .jp-RenderedMarkdown,
